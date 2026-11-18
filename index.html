@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Emoji Founders — E-Cell Plaksha</title>
+  <meta name="description" content="Ten companies. Three emojis each. A guessing game for founders, by E-Cell Plaksha.">
+  <meta name="theme-color" content="#0B0B0F">
+  <meta property="og:title" content="Emoji Founders — E-Cell Plaksha">
+  <meta property="og:description" content="Ten companies. Three emojis each. How well do you know the giants?">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@1&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- GSAP core. If this fails to load, the game still runs in instant mode. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+  <div class="glow glow-a" aria-hidden="true"></div>
+  <div class="glow glow-b" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div id="cursor" aria-hidden="true"></div>
+
+  <main id="stage">
+    <section id="view-start" class="view is-active" aria-label="Start screen">
+      <p class="kicker" data-animate>E-Cell · Plaksha</p>
+      <h1 class="title" tabindex="-1">
+        <span class="line" data-animate><span class="line-inner">Emoji</span></span>
+        <span class="line line-accent" data-animate><span class="line-inner">Founders</span></span>
+      </h1>
+      <p class="subtitle" data-animate>A guessing game for founders.</p>
+      <p class="meta" data-animate><span>10 companies</span><span>3 emojis each</span><span>100 points</span></p>
+      <div class="cta-row" data-animate>
+        <button id="btn-start" class="btn btn-primary" data-magnetic>Start guessing <span class="arrow" aria-hidden="true">&#8594;</span></button>
+        <p class="hint">or press <kbd>Enter</kbd></p>
+      </div>
+    </section>
+
+    <section id="view-game" class="view" aria-label="Game screen" aria-hidden="true">
+      <div class="hud" data-animate>
+        <p class="hud-q"><span id="hud-current">01</span><span class="hud-sep">/</span><span id="hud-total">10</span></p>
+        <p class="hud-score">Score <span id="hud-score">0</span></p>
+      </div>
+      <div class="progress" data-animate><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="stage-emoji" data-animate>
+        <div class="ghost" id="ghost" aria-hidden="true">01</div>
+        <div class="emoji-row" id="emoji-row"></div>
+      </div>
+      <h2 class="prompt" data-animate tabindex="-1">Guess the company</h2>
+      <div class="options" id="options" data-animate></div>
+      <div class="reveal-slot" data-animate><div class="reveal" id="reveal" aria-live="polite"></div></div>
+      <div class="next-slot" data-animate>
+        <button id="btn-next" class="btn btn-ghost">Next <span class="arrow" aria-hidden="true">&#8594;</span></button>
+      </div>
+    </section>
+
+    <section id="view-end" class="view" aria-label="Results screen" aria-hidden="true">
+      <p class="kicker" data-animate>Results</p>
+      <h2 class="end-title" data-animate tabindex="-1">That&#8217;s a wrap.</h2>
+      <div class="score-row" data-animate>
+        <div class="odometer" id="odometer"></div>
+        <span class="score-total">/ 100</span>
+      </div>
+      <p class="end-meta" id="end-meta" data-animate></p>
+      <p class="verdict" id="verdict" data-animate></p>
+      <div class="end-actions" data-animate>
+        <button id="btn-restart" class="btn btn-primary" data-magnetic>Play again <span class="arrow" aria-hidden="true">&#8635;</span></button>
+        <button id="btn-share" class="btn btn-ghost">Share score</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+  <noscript><p style="text-align:center;padding:2rem;font-family:sans-serif;color:#F4F2ED">Emoji Founders needs JavaScript to run.</p></noscript>
+  <script src="js/data.js"></script>
+  <script src="js/motion.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
