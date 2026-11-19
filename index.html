@@ -1,80 +1,669 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Emoji Founders — E-Cell Plaksha</title>
-  <meta name="description" content="Ten companies. Three emojis each. A guessing game for founders, by E-Cell Plaksha.">
-  <meta name="theme-color" content="#0B0B0F">
-  <meta property="og:title" content="Emoji Founders — E-Cell Plaksha">
-  <meta property="og:description" content="Ten companies. Three emojis each. How well do you know the giants?">
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@1&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  <!-- GSAP core. If this fails to load, the game still runs in instant mode. -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Emoji Founders — E-Cell Plaksha</title>
+<meta name="description" content="Ten companies. Three emojis each. A guessing game for founders, by E-Cell Plaksha.">
+<meta name="theme-color" content="#0A0A0A">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+:root{
+  --bg:#0A0A0A; --frame:#1B1B1B; --face:#131313; --ink:#F5F3EF; --muted:#9A958E;
+  --accent:#F0604C; --accent-hi:#FF7159; --line:#242424;
+  --font:'Space Grotesk',sans-serif; --ease:cubic-bezier(0.16,1,0.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);min-height:100dvh;display:flex;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:#160B08}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.view [tabindex="-1"]:focus{outline:none}
+.sr-only{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+button{font-family:var(--font)}
+
+/* ambient */
+.glow{position:fixed;left:50%;top:34%;width:min(92vw,880px);aspect-ratio:1;border-radius:50%;translate:-50% -50%;background:radial-gradient(circle,rgba(240,96,76,.10) 0%,transparent 62%);pointer-events:none;z-index:0}
+.grain{position:fixed;inset:0;z-index:80;pointer-events:none;opacity:.05;background-size:180px;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+#cursor{position:fixed;left:0;top:0;width:34px;height:34px;border:1px solid rgba(245,243,239,.5);border-radius:50%;translate:-50% -50%;mix-blend-mode:difference;pointer-events:none;z-index:85;opacity:0}
+
+/* header / footer */
+.site-head{position:fixed;top:0;left:0;right:0;z-index:40;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:16px 22px;padding-top:calc(16px + env(safe-area-inset-top))}
+.head-left{justify-self:start}
+.head-left img{height:22px;width:auto;display:block;opacity:.92}
+.brand-fallback{font-weight:700;font-size:10px;letter-spacing:.22em;color:var(--muted)}
+.wordmark{font-weight:700;font-size:.95rem;letter-spacing:.18em;text-align:center;text-transform:uppercase}
+.wordmark-sub{display:block;font-weight:500;font-size:8px;letter-spacing:.32em;color:var(--muted);margin-top:5px}
+.head-right{justify-self:end;display:flex;align-items:baseline;gap:8px}
+.score-label{font-size:9px;letter-spacing:.24em;color:var(--muted)}
+#hud-score{font-weight:700;font-size:1rem;font-variant-numeric:tabular-nums;display:inline-block}
+.site-foot{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;justify-content:space-between;align-items:center;padding:16px 22px;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.foot-left{display:flex;align-items:center;gap:10px}
+#hud-round{font-weight:500;font-size:.8rem;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.ring-track{fill:none;stroke:#2A2A2A;stroke-width:2}
+.ring-fill{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-dasharray:56.55;stroke-dashoffset:56.55}
+.foot-btn{display:flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;color:var(--ink);font-weight:500;font-size:.8rem;padding:6px}
+.foot-btn svg{width:18px;height:18px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .45s var(--ease)}
+.foot-btn:hover svg{transform:rotate(180deg)}
+
+/* stage: views share one grid cell -> zero layout jump */
+#stage{position:relative;z-index:10;display:grid;width:100%;max-width:620px;margin:auto;padding:92px 20px 96px}
+.view{grid-area:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;visibility:hidden;pointer-events:none}
+.view.is-active{visibility:visible;pointer-events:auto}
+
+/* cards */
+.card-row{display:flex;justify-content:center;gap:clamp(12px,3vw,22px);margin-bottom:clamp(20px,4vh,34px)}
+.ecard{width:clamp(86px,23vw,116px);aspect-ratio:100/140;background:var(--frame);border-radius:16px;padding:7px;box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 0 0 1px #242424;will-change:transform}
+.ecard-inner{width:100%;height:100%}
+.card-face{position:relative;width:100%;height:100%;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#0F0F0F 0%,#26150F 36%,#E8604C 100%)}
+.card-face::after{content:"";position:absolute;inset:0;opacity:.16;pointer-events:none;background-size:140px;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.lines{position:absolute;inset:0;width:100%;height:100%}
+.lines path{fill:none;stroke:#FF8A73;stroke-width:.8;opacity:.5}
+.card-emoji{position:relative;z-index:1;font-size:clamp(2.4rem,8.5vw,3.4rem);line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35))}
+
+/* start */
+.rules{color:var(--ink);font-size:.95rem;line-height:1.6;text-align:center;max-width:44ch;margin-bottom:30px}
+.cta-row{display:flex;flex-direction:column;align-items:center;gap:14px}
+.hint{font-size:.75rem;color:var(--muted)}
+kbd{font:inherit;border:1px solid #333;border-radius:5px;padding:1px 6px;background:#161616}
+
+/* buttons */
+.btn{font-size:.95rem;font-weight:700;padding:15px 30px;min-height:50px;border-radius:999px;border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;touch-action:manipulation;transition:background-color .2s var(--ease),border-color .2s var(--ease),color .2s var(--ease)}
+.btn-primary{background:var(--accent);color:#160B08}
+.btn-primary:hover{background:var(--accent-hi)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:#333;font-weight:500}
+.btn-ghost:hover{background:rgba(255,255,255,.04);border-color:var(--ink)}
+.arrow{transition:translate .2s var(--ease)}
+.btn:hover .arrow{translate:4px 0}
+
+/* game */
+.prompt{font-weight:500;font-size:1.05rem;color:var(--ink);text-align:center;margin-bottom:16px}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-bottom:16px}
+.option-btn{background:var(--frame);padding:6px;border-radius:14px;border:1px solid var(--line);cursor:pointer;text-align:left;transition:border-color .22s var(--ease)}
+.option-face{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--face);border-radius:9px;padding:13px 14px;min-height:50px;transition:background-color .22s var(--ease)}
+.option-face::after{content:"";position:absolute;inset:0;opacity:.1;pointer-events:none;background-size:140px;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.option-label{position:relative;z-index:1;font-weight:500;font-size:.95rem;color:var(--ink);transition:color .22s var(--ease)}
+.option-tail{position:relative;z-index:1;display:flex;align-items:center}
+.option-btn:hover:not(:disabled){border-color:rgba(240,96,76,.45)}
+.option-btn:hover:not(:disabled) .option-face{background:#181818}
+.option-btn:disabled{cursor:default}
+.keycap{font-size:.72rem;color:var(--muted);border:1px solid #2E2E2E;background:#1D1D1D;padding:3px 7px;border-radius:6px;font-variant-numeric:tabular-nums}
+.option-btn.is-correct{border-color:rgba(240,96,76,.8)}
+.option-btn.is-correct .option-face{background:linear-gradient(180deg,#1A1A1A 0%,#E8604C 130%)}
+.option-btn.is-correct .option-label{color:#fff;font-weight:700}
+.option-btn.is-wrong .option-face{background:#101010}
+.option-btn.is-wrong .option-label{color:var(--muted)}
+.check,.cross{width:18px;height:18px;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.check{stroke:#fff}
+.cross{stroke:rgba(255,255,255,.75)}
+.check path{stroke-dasharray:24;stroke-dashoffset:24}
+.cross path{stroke-dasharray:17;stroke-dashoffset:17}
+
+/* reveal */
+.reveal-slot{width:100%;min-height:6.6rem;margin-bottom:8px;text-align:center}
+.reveal-head{display:flex;justify-content:center;align-items:baseline;gap:10px;margin-bottom:6px}
+.reveal-name{font-weight:700;font-size:1.3rem}
+.reveal-year{color:var(--accent);font-size:.72rem;letter-spacing:.18em;font-weight:500}
+.reveal-fact{color:var(--muted);font-size:.92rem;line-height:1.55;max-width:44ch;margin:0 auto}
+.next-slot{height:56px;width:100%;display:flex;justify-content:center;align-items:flex-start}
+#btn-next{opacity:0;pointer-events:none}
+.chip{position:absolute;color:var(--accent);font-weight:700;font-size:.95rem;font-variant-numeric:tabular-nums;pointer-events:none;z-index:20}
+
+/* end */
+.kicker{font-size:.7rem;letter-spacing:.3em;color:var(--accent);font-weight:500;margin-bottom:14px}
+.end-title{font-weight:700;font-size:clamp(1.9rem,6vw,2.6rem);letter-spacing:-.01em;margin-bottom:26px;text-align:center}
+.score-row{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+.odometer{display:flex;font-size:clamp(4rem,15vw,6.3rem);font-weight:700;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.odo-col{height:1em;overflow:hidden}
+.odo-strip{display:flex;flex-direction:column}
+.odo-strip span{display:block;height:1em;line-height:1}
+.score-total{color:var(--accent);font-weight:500;font-size:clamp(1.2rem,4vw,1.7rem)}
+.end-meta{color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums;margin-bottom:16px}
+.verdict{color:var(--accent);font-weight:500;font-size:1.05rem;margin-bottom:34px;text-align:center}
+.end-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+
+/* toast / confetti */
+.toast{position:fixed;left:50%;bottom:calc(70px + env(safe-area-inset-bottom));translate:-50% 0;background:var(--frame);border:1px solid #333;color:var(--ink);padding:11px 20px;border-radius:999px;font-size:.85rem;font-weight:500;z-index:90;opacity:0;pointer-events:none}
+.confetti-layer{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:88}
+.confetti{position:absolute;left:0;top:0;will-change:transform}
+
+@media (max-width:600px){
+  .options{grid-template-columns:1fr}
+  .reveal-slot{min-height:7.4rem}
+  .end-actions{flex-direction:column;width:100%}
+  .end-actions .btn{width:100%}
+  .site-head,.site-foot{padding-left:16px;padding-right:16px}
+}
+@media (hover:none){.keycap,.hint,#cursor{display:none}}
+@media (max-height:760px) and (min-width:601px){
+  .ecard{width:96px}
+  .card-row{margin-bottom:16px}
+  .reveal-slot{min-height:5.8rem}
+  #stage{padding-top:84px;padding-bottom:88px}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+</style>
 </head>
 <body>
-  <div class="glow glow-a" aria-hidden="true"></div>
-  <div class="glow glow-b" aria-hidden="true"></div>
-  <div class="grain" aria-hidden="true"></div>
-  <div id="cursor" aria-hidden="true"></div>
+<div class="glow" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+<div id="cursor" aria-hidden="true"></div>
 
-  <main id="stage">
-    <section id="view-start" class="view is-active" aria-label="Start screen">
-      <p class="kicker" data-animate>E-Cell · Plaksha</p>
-      <h1 class="title" tabindex="-1">
-        <span class="line" data-animate><span class="line-inner">Emoji</span></span>
-        <span class="line line-accent" data-animate><span class="line-inner">Founders</span></span>
-      </h1>
-      <p class="subtitle" data-animate>A guessing game for founders.</p>
-      <p class="meta" data-animate><span>10 companies</span><span>3 emojis each</span><span>100 points</span></p>
-      <div class="cta-row" data-animate>
-        <button id="btn-start" class="btn btn-primary" data-magnetic>Start guessing <span class="arrow" aria-hidden="true">&#8594;</span></button>
-        <p class="hint">or press <kbd>Enter</kbd></p>
-      </div>
-    </section>
+<header class="site-head" id="site-head">
+  <div class="head-left">
+    <img src="assets/logo.png" alt="E-Cell Plaksha" onerror="this.remove();var f=document.getElementById('brand-fallback');if(f)f.hidden=false;">
+    <span id="brand-fallback" class="brand-fallback" hidden>E-CELL</span>
+  </div>
+  <h1 class="wordmark">Emoji Founders<span class="wordmark-sub">E-Cell · Plaksha University</span></h1>
+  <div class="head-right"><span class="score-label">SCORE</span><span id="hud-score">0</span></div>
+</header>
 
-    <section id="view-game" class="view" aria-label="Game screen" aria-hidden="true">
-      <div class="hud" data-animate>
-        <p class="hud-q"><span id="hud-current">01</span><span class="hud-sep">/</span><span id="hud-total">10</span></p>
-        <p class="hud-score">Score <span id="hud-score">0</span></p>
-      </div>
-      <div class="progress" data-animate><div class="progress-fill" id="progress-fill"></div></div>
-      <div class="stage-emoji" data-animate>
-        <div class="ghost" id="ghost" aria-hidden="true">01</div>
-        <div class="emoji-row" id="emoji-row"></div>
-      </div>
-      <h2 class="prompt" data-animate tabindex="-1">Guess the company</h2>
-      <div class="options" id="options" data-animate></div>
-      <div class="reveal-slot" data-animate><div class="reveal" id="reveal" aria-live="polite"></div></div>
-      <div class="next-slot" data-animate>
-        <button id="btn-next" class="btn btn-ghost">Next <span class="arrow" aria-hidden="true">&#8594;</span></button>
-      </div>
-    </section>
+<main id="stage">
+  <section id="view-start" class="view is-active" aria-label="Start screen">
+    <div class="card-row" id="intro-cards" data-animate>
+      <div class="ecard" data-tilt="-4"><div class="ecard-inner"><div class="card-face"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><path d="M1 1 H99 V139 H1 Z M1 38 H99 M62 1 V139 M1 139 L62 38 M1 38 L99 96 M62 38 L99 22" vector-effect="non-scaling-stroke"/></svg><span class="card-emoji">&#128269;</span></div></div></div>
+      <div class="ecard" data-tilt="1"><div class="ecard-inner"><div class="card-face"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><path d="M1 1 H99 V139 H1 Z M1 38 H99 M62 1 V139 M1 139 L62 38 M1 38 L99 96 M62 38 L99 22" vector-effect="non-scaling-stroke"/></svg><span class="card-emoji">&#127822;</span></div></div></div>
+      <div class="ecard" data-tilt="4"><div class="ecard-inner"><div class="card-face"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><path d="M1 1 H99 V139 H1 Z M1 38 H99 M62 1 V139 M1 139 L62 38 M1 38 L99 96 M62 38 L99 22" vector-effect="non-scaling-stroke"/></svg><span class="card-emoji">&#128230;</span></div></div></div>
+    </div>
+    <p class="rules" data-animate>Rules are simple. Ten companies, three emojis each. Read the clues, pick the company, earn 10 points a hit. Score 70+ to earn the confetti.</p>
+    <div class="cta-row" data-animate>
+      <button id="btn-start" class="btn btn-primary" data-magnetic>Start guessing <span class="arrow" aria-hidden="true">&#8594;</span></button>
+      <p class="hint">or press <kbd>Enter</kbd></p>
+    </div>
+  </section>
 
-    <section id="view-end" class="view" aria-label="Results screen" aria-hidden="true">
-      <p class="kicker" data-animate>Results</p>
-      <h2 class="end-title" data-animate tabindex="-1">That&#8217;s a wrap.</h2>
-      <div class="score-row" data-animate>
-        <div class="odometer" id="odometer"></div>
-        <span class="score-total">/ 100</span>
-      </div>
-      <p class="end-meta" id="end-meta" data-animate></p>
-      <p class="verdict" id="verdict" data-animate></p>
-      <div class="end-actions" data-animate>
-        <button id="btn-restart" class="btn btn-primary" data-magnetic>Play again <span class="arrow" aria-hidden="true">&#8635;</span></button>
-        <button id="btn-share" class="btn btn-ghost">Share score</button>
-      </div>
-    </section>
-  </main>
+  <section id="view-game" class="view" aria-label="Game screen" aria-hidden="true">
+    <div class="card-row" id="emoji-row" data-animate></div>
+    <p class="prompt" data-animate tabindex="-1">Guess the company</p>
+    <div class="options" id="options" data-animate></div>
+    <div class="reveal-slot" data-animate><div class="reveal" id="reveal" aria-live="polite"></div></div>
+    <div class="next-slot" data-animate><button id="btn-next" class="btn btn-ghost">Next <span class="arrow" aria-hidden="true">&#8594;</span></button></div>
+  </section>
 
-  <div class="toast" id="toast" role="status"></div>
-  <noscript><p style="text-align:center;padding:2rem;font-family:sans-serif;color:#F4F2ED">Emoji Founders needs JavaScript to run.</p></noscript>
-  <script src="js/data.js"></script>
-  <script src="js/motion.js"></script>
-  <script src="js/game.js"></script>
+  <section id="view-end" class="view" aria-label="Results screen" aria-hidden="true">
+    <p class="kicker" data-animate>RESULTS</p>
+    <h2 class="end-title" data-animate tabindex="-1">That&#8217;s a wrap.</h2>
+    <div class="score-row" data-animate><div class="odometer" id="odometer"></div><span class="score-total">/ 100</span></div>
+    <p class="end-meta" id="end-meta" data-animate></p>
+    <p class="verdict" id="verdict" data-animate></p>
+    <div class="end-actions" data-animate>
+      <button id="btn-restart" class="btn btn-primary" data-magnetic>Play again <span class="arrow" aria-hidden="true">&#8635;</span></button>
+      <button id="btn-share" class="btn btn-ghost">Share score</button>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot" id="site-foot">
+  <div class="foot-left">
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><circle class="ring-track" cx="11" cy="11" r="9"/><circle class="ring-fill" id="ring-fill" cx="11" cy="11" r="9" transform="rotate(-90 11 11)"/></svg>
+    <span id="hud-round">00 / 10</span>
+  </div>
+  <button id="btn-shuffle" class="foot-btn" aria-label="Restart game">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h4l10 12h4m0 0-3-3m3 3-3 3M3 18h4l3.2-3.8M14.8 9.8 17 6h4m0 0-3-3m3 3-3 3"/></svg>
+    <span>Restart</span>
+  </button>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
+<noscript><p style="text-align:center;padding:2rem;color:#F5F3EF">Emoji Founders needs JavaScript to run.</p></noscript>
+
+<script>
+window.EF = window.EF || {};
+EF.QUESTIONS = [
+  { emojis: ['\u{1F50D}','\u{1F5FA}\uFE0F','\u{1F4E7}'], answer: 'Google', options: ['Google','Apple','Amazon','Meta'], year: '1998', fact: 'Larry Page & Sergey Brin — it started as a research project called BackRub.' },
+  { emojis: ['\u{1F34E}','\u{1F4F1}','\u{1F4BB}'], answer: 'Apple', options: ['Microsoft','Apple','Samsung','Sony'], year: '1976', fact: 'Jobs, Wozniak & Wayne — famously born in a garage.' },
+  { emojis: ['\u{1F4E6}','\u{1F6D2}','\u{1F680}'], answer: 'Amazon', options: ['Alibaba','Shopify','Amazon','Walmart'], year: '1994', fact: 'Jeff Bezos started it as an online bookstore.' },
+  { emojis: ['\u{1F465}','\u{1F44D}','\u{1F4D8}'], answer: 'Meta', options: ['Twitter','Meta','LinkedIn','Snapchat'], year: '2004', fact: 'Mark Zuckerberg launched TheFacebook from a Harvard dorm.' },
+  { emojis: ['\u{1F697}','\u26A1','\u{1F50B}'], answer: 'Tesla', options: ['Rivian','Tesla','Ford','Toyota'], year: '2003', fact: 'Martin Eberhard & Marc Tarpenning founded it; Musk led the first big raise.' },
+  { emojis: ['\u{1FA9F}','\u{1F4BB}','\u{1F3AE}'], answer: 'Microsoft', options: ['Sony','Nintendo','Microsoft','Steam'], year: '1975', fact: 'Gates & Allen built BASIC for the Altair 8800.' },
+  { emojis: ['\u{1F3AC}','\u{1F37F}','\u{1F4FA}'], answer: 'Netflix', options: ['Hulu','Disney+','HBO','Netflix'], year: '1997', fact: 'Reed Hastings & Marc Randolph — DVDs by mail, no late fees.' },
+  { emojis: ['\u2615','\u{1F964}','\u{1F7E2}'], answer: 'Starbucks', options: ['Dunkin','Starbucks','Costa',"Peet's"], year: '1971', fact: "Three friends, one store in Seattle's Pike Place Market." },
+  { emojis: ['\u{1F3E8}','\u2708\uFE0F','\u{1F6CF}\uFE0F'], answer: 'Airbnb', options: ['Booking.com','Airbnb','Expedia','Vrbo'], year: '2008', fact: 'Chesky, Gebbia & Blecharczyk — three air mattresses on a floor.' },
+  { emojis: ['\u{1F45F}','\u2714\uFE0F','\u{1F3C3}'], answer: 'Nike', options: ['Adidas','Puma','Nike','Reebok'], year: '1964', fact: 'Bowerman & Knight — as Blue Ribbon Sports. The Swoosh cost $35.' }
+];
+EF.PTS = 10;
+</script>
+<script>
+(function () {
+  'use strict';
+  var HAS = typeof window.gsap !== 'undefined';
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var FINE = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  var INSTANT = !HAS || REDUCED;
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function setFinal(t, p) {
+    var list = t instanceof Element ? [t] : Array.from(t);
+    list.forEach(function (el) {
+      if (!el || !el.style) return;
+      if ('opacity' in p) el.style.opacity = p.opacity;
+      if (p.clear) el.style.transform = 'none';
+    });
+  }
+  var M = {
+    instant: INSTANT,
+    init: function () {
+      if (!HAS) return;
+      gsap.defaults({ ease: 'expo.out', duration: 0.7, overwrite: 'auto' });
+      if (!INSTANT) {
+        gsap.to('.glow', { x: 'random(-80,80)', y: 'random(-60,60)', duration: 24, ease: 'sine.inOut', repeat: -1, yoyo: true, repeatRefresh: true });
+        if (FINE) this._cursor();
+        var self = this;
+        document.querySelectorAll('[data-magnetic]').forEach(function (b) { self._magnetic(b); });
+        this._press();
+      }
+      document.addEventListener('visibilitychange', function () { gsap.globalTimeline.paused(document.hidden); });
+    },
+    delay: function (s, fn) { if (INSTANT) { fn(); return null; } return gsap.delayedCall(s, fn); },
+    killTree: function (root) { if (HAS) gsap.killTweensOf([root].concat(Array.from(root.querySelectorAll('*')))); root.innerHTML = ''; },
+    killTweens: function (root) { if (HAS) gsap.killTweensOf([root].concat(Array.from(root.querySelectorAll('*')))); },
+    _idle: function (inners) {
+      if (INSTANT) return;
+      inners.forEach(function (el) {
+        gsap.to(el, { y: rand(-3, 3), rotation: rand(-1.4, 1.4), duration: rand(2.4, 3.4), delay: rand(0, 0.5), repeat: -1, yoyo: true, ease: 'sine.inOut' });
+      });
+    },
+    intro: function (p) {
+      if (INSTANT) { p.cards.forEach(function (c) { c.el.style.transform = 'rotate(' + c.tilt + 'deg)'; }); return; }
+      var self = this;
+      gsap.set(p.chrome, { opacity: 0, y: -8 });
+      gsap.set(p.rest, { opacity: 0, y: 16 });
+      gsap.timeline({ onComplete: function () { self._idle(p.cards.map(function (c) { return c.inner; })); } })
+        .to(p.chrome, { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, 0)
+        .fromTo(p.cards.map(function (c) { return c.el; }),
+          { opacity: 0, y: 46, scale: 0.92, rotation: function (i) { return p.cards[i].tilt + 7; } },
+          { opacity: 1, y: 0, scale: 1, rotation: function (i) { return p.cards[i].tilt; }, duration: 0.85, stagger: 0.1, ease: 'back.out(1.4)' }, 0.15)
+        .to(p.rest, { opacity: 1, y: 0, duration: 0.8, stagger: 0.08 }, 0.55);
+    },
+    out: function (t, done) {
+      var list = Array.from(t).filter(Boolean);
+      if (INSTANT || !list.length) { setFinal(list, { opacity: 0 }); if (done) done(); return; }
+      gsap.to(list, { opacity: 0, y: -14, duration: 0.26, stagger: 0.03, ease: 'power2.in', onComplete: function () { if (done) done(); } });
+    },
+    in: function (t, done) {
+      var list = Array.from(t).filter(Boolean);
+      if (INSTANT || !list.length) { setFinal(list, { opacity: 1, clear: true }); if (done) done(); return; }
+      gsap.fromTo(list, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.06, onComplete: function () { if (done) done(); } });
+    },
+    viewSwap: function (from, to, opts) {
+      opts = opts || {};
+      var self = this;
+      var finish = function () {
+        var h = to.querySelector('[tabindex="-1"]');
+        if (h) h.focus({ preventScroll: true });
+        if (opts.done) opts.done();
+      };
+      this.out(from.querySelectorAll('[data-animate]'), function () {
+        from.classList.remove('is-active'); from.setAttribute('aria-hidden', 'true');
+        to.classList.add('is-active'); to.removeAttribute('aria-hidden');
+        if (opts.mutate) opts.mutate();
+        if (opts.onShown) opts.onShown(finish); else self.in(to.querySelectorAll('[data-animate]'), finish);
+      });
+    },
+    enterQuestion: function (p, done) {
+      var self = this;
+      if (INSTANT) {
+        p.cards.forEach(function (c) { c.el.style.opacity = 1; c.el.style.transform = 'rotate(' + c.tilt + 'deg)'; });
+        setFinal(p.options, { opacity: 1, clear: true });
+        if (done) done(); return;
+      }
+      gsap.timeline({ onComplete: function () { self._idle(p.cards.map(function (c) { return c.inner; })); if (done) done(); } })
+        .fromTo(p.cards.map(function (c) { return c.el; }),
+          { opacity: 0, y: 40, scale: 0.92, rotation: function (i) { return p.cards[i].tilt + 6; } },
+          { opacity: 1, y: 0, scale: 1, rotation: function (i) { return p.cards[i].tilt; }, duration: 0.8, stagger: 0.09, ease: 'back.out(1.4)' }, 0)
+        .fromTo(p.options, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.05 }, 0.22);
+    },
+    react: function (outers, ok) {
+      if (INSTANT) return;
+      if (ok) gsap.to(outers, { y: -10, duration: 0.18, stagger: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' });
+      else gsap.to(outers, { y: 3, scale: 0.98, duration: 0.22, yoyo: true, repeat: 1, ease: 'power2.inOut' });
+    },
+    shake: function (b) { if (INSTANT) return; gsap.to(b, { keyframes: [{ x: -7 }, { x: 5 }, { x: -3 }, { x: 1 }, { x: 0 }], duration: 0.45, ease: 'power1.inOut' }); },
+    dim: function (bs) { if (INSTANT) { setFinal(bs, { opacity: 0.4 }); return; } gsap.to(bs, { opacity: 0.4, duration: 0.3 }); },
+    draw: function (path) { if (INSTANT) { path.style.strokeDashoffset = 0; return; } gsap.to(path, { strokeDashoffset: 0, duration: 0.4, ease: 'power2.out', delay: 0.05 }); },
+    roll: function (el, to, dur) {
+      if (INSTANT) { el.textContent = to; return; }
+      if (el.__roll) el.__roll.kill();
+      var proxy = { v: parseInt(el.textContent, 10) || 0 };
+      el.__roll = gsap.to(proxy, { v: to, duration: dur || 0.5, ease: 'power3.out', snap: { v: 1 }, onUpdate: function () { el.textContent = Math.round(proxy.v); } });
+    },
+    pop: function (el) { if (INSTANT) return; gsap.fromTo(el, { scale: 1 }, { scale: 1.18, duration: 0.14, yoyo: true, repeat: 1, ease: 'power2.out' }); },
+    tap: function (b) { if (INSTANT) return; gsap.fromTo(b, { scale: 0.97 }, { scale: 1, duration: 0.3 }); },
+    ring: function (el, p) {
+      var off = 56.55 * (1 - p);
+      if (INSTANT) { el.style.strokeDashoffset = off; return; }
+      gsap.killTweensOf(el);
+      gsap.to(el, { strokeDashoffset: off, duration: 0.6, ease: 'power3.inOut' });
+    },
+    chip: function (parent, x, y, text) {
+      if (INSTANT) return;
+      var el = document.createElement('span');
+      el.className = 'chip'; el.textContent = text;
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+      parent.appendChild(el);
+      gsap.fromTo(el, { opacity: 1, y: 0 }, { opacity: 0, y: -26, duration: 0.9, ease: 'power2.out', onComplete: function () { el.remove(); } });
+    },
+    showNext: function (b, done) {
+      b.style.pointerEvents = 'auto';
+      if (INSTANT) { setFinal(b, { opacity: 1, clear: true }); if (done) done(); return; }
+      gsap.killTweensOf(b);
+      gsap.fromTo(b, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, onComplete: function () { if (done) done(); } });
+    },
+    hideNext: function (b, quick) {
+      b.style.pointerEvents = 'none';
+      if (INSTANT) { setFinal(b, { opacity: 0 }); return; }
+      gsap.killTweensOf(b);
+      if (quick) gsap.to(b, { opacity: 0, y: 8, duration: 0.15, ease: 'power2.in' }); else gsap.set(b, { opacity: 0, y: 12 });
+    },
+    reveal: function (c) {
+      var head = c.querySelector('.reveal-head'), fact = c.querySelector('.reveal-fact');
+      if (INSTANT) { setFinal([head, fact], { opacity: 1, clear: true }); return; }
+      gsap.set([head, fact], { opacity: 0 });
+      gsap.timeline()
+        .fromTo(head, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.55 }, 0)
+        .fromTo(fact, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5 }, 0.12);
+    },
+    odometer: function (c, score, done) {
+      c.setAttribute('aria-label', 'Final score: ' + score + ' out of 100');
+      if (INSTANT) { c.textContent = score; if (done) done(); return; }
+      c.innerHTML = '';
+      var strips = String(score).split('').map(function (d) {
+        var col = document.createElement('span'); col.className = 'odo-col'; col.setAttribute('aria-hidden', 'true');
+        var strip = document.createElement('span'); strip.className = 'odo-strip';
+        for (var i = 0; i < 20; i++) { var cell = document.createElement('span'); cell.textContent = i % 10; strip.appendChild(cell); }
+        col.appendChild(strip); c.appendChild(col);
+        return { strip: strip, digit: Number(d) };
+      });
+      gsap.to(strips.map(function (s) { return s.strip; }), {
+        yPercent: function (i) { return -(10 + strips[i].digit) * 5; },
+        duration: 1.2, stagger: 0.1, delay: 0.15, onComplete: function () { if (done) done(); }
+      });
+    },
+    confetti: function () {
+      if (INSTANT) return;
+      var layer = document.createElement('div');
+      layer.className = 'confetti-layer'; layer.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(layer);
+      var colors = ['#F0604C', '#F5F3EF', '#3A3A3A'];
+      var W = window.innerWidth, H = window.innerHeight;
+      for (var i = 0; i < 40; i++) {
+        var p = document.createElement('span');
+        p.className = 'confetti';
+        p.style.width = rand(5, 10) + 'px'; p.style.height = rand(3, 6) + 'px';
+        p.style.background = colors[i % colors.length];
+        layer.appendChild(p);
+        var dur = rand(1.5, 2.3), delay = rand(0, 0.35), rot0 = rand(0, 180);
+        gsap.set(p, { x: rand(0, W), y: -30, rotation: rot0 });
+        gsap.to(p, { y: H + 60, rotation: rot0 + rand(-260, 260), duration: dur, delay: delay, ease: 'power1.in' });
+        gsap.to(p, { x: '+=' + rand(-60, 60), duration: 0.5, delay: delay, yoyo: true, repeat: 3, ease: 'sine.inOut' });
+        gsap.to(p, { opacity: 0, duration: 0.3, delay: delay + dur - 0.3 });
+      }
+      gsap.delayedCall(2.8, function () { layer.remove(); });
+    },
+    toast: function (el, msg) {
+      el.textContent = msg;
+      if (el.__ttl && el.__ttl.kill) el.__ttl.kill();
+      if (INSTANT) {
+        el.style.opacity = 1;
+        var t = setTimeout(function () { el.style.opacity = 0; }, 1800);
+        el.__ttl = { kill: function () { clearTimeout(t); } };
+        return;
+      }
+      gsap.killTweensOf(el);
+      gsap.fromTo(el, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35 });
+      el.__ttl = gsap.delayedCall(1.8, function () { gsap.to(el, { opacity: 0, y: 8, duration: 0.3, ease: 'power2.in' }); });
+    },
+    lift: function (b, on) { if (INSTANT || b.disabled) return; gsap.to(b, { y: on ? -2 : 0, duration: 0.18 }); },
+    _magnetic: function (b) {
+      var xTo = gsap.quickTo(b, 'x', { duration: 0.35, ease: 'power3.out' });
+      var yTo = gsap.quickTo(b, 'y', { duration: 0.35, ease: 'power3.out' });
+      b.addEventListener('pointermove', function (e) {
+        var r = b.getBoundingClientRect();
+        xTo(clamp((e.clientX - r.left - r.width / 2) * 0.25, -7, 7));
+        yTo(clamp((e.clientY - r.top - r.height / 2) * 0.25, -7, 7));
+      });
+      b.addEventListener('pointerleave', function () { xTo(0); yTo(0); });
+    },
+    _press: function () {
+      var pressed = null;
+      document.addEventListener('pointerdown', function (e) {
+        var b = e.target.closest ? e.target.closest('.btn,.option-btn,.foot-btn') : null;
+        if (!b || b.disabled) return;
+        pressed = b;
+        gsap.to(b, { scale: 0.97, duration: 0.12, ease: 'power2.out' });
+      });
+      var release = function () { if (!pressed) return; gsap.to(pressed, { scale: 1, duration: 0.25 }); pressed = null; };
+      document.addEventListener('pointerup', release);
+      document.addEventListener('pointercancel', release);
+    },
+    _cursor: function () {
+      var ring = document.getElementById('cursor');
+      var xTo = gsap.quickTo(ring, 'x', { duration: 0.4, ease: 'expo.out' });
+      var yTo = gsap.quickTo(ring, 'y', { duration: 0.4, ease: 'expo.out' });
+      var shown = false;
+      window.addEventListener('pointermove', function (e) {
+        if (!shown) { shown = true; gsap.to(ring, { opacity: 1, duration: 0.3 }); }
+        xTo(e.clientX); yTo(e.clientY);
+      });
+      document.addEventListener('pointerover', function (e) {
+        var hot = e.target.closest ? e.target.closest('button,a,[data-magnetic]') : null;
+        gsap.to(ring, { scale: hot ? 1.6 : 1, duration: 0.3 });
+      });
+      document.documentElement.addEventListener('pointerleave', function () { shown = false; gsap.to(ring, { opacity: 0, duration: 0.2 }); });
+    }
+  };
+  EF.motion = M;
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var M = EF.motion, QUESTIONS = EF.QUESTIONS, PTS = EF.PTS, MAX = QUESTIONS.length * PTS;
+  var TILTS = [-3.5, 1.2, 3.5];
+  var LINES = '<svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><path d="M1 1 H99 V139 H1 Z M1 38 H99 M62 1 V139 M1 139 L62 38 M1 38 L99 96 M62 38 L99 22" vector-effect="non-scaling-stroke"/></svg>';
+  function $(id) { return document.getElementById(id); }
+  var dom = {
+    views: { start: $('view-start'), game: $('view-game'), end: $('view-end') },
+    head: $('site-head'), foot: $('site-foot'), introRow: $('intro-cards'),
+    startBtn: $('btn-start'),
+    score: $('hud-score'), round: $('hud-round'), ring: $('ring-fill'),
+    emojis: $('emoji-row'), options: $('options'), reveal: $('reveal'), next: $('btn-next'),
+    odometer: $('odometer'), meta: $('end-meta'), verdict: $('verdict'),
+    restart: $('btn-restart'), share: $('btn-share'), shuffle: $('btn-shuffle'),
+    toast: $('toast'), stage: $('stage')
+  };
+  var state = { view: 'start', phase: 'idle', busy: false, order: [], index: 0, score: 0, correct: 0, streak: 0, best: 0, timers: [] };
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function q() { return state.order[state.index]; }
+  function isLast() { return state.index === state.order.length - 1; }
+  function later(s, fn) { var c = M.delay(s, fn); if (c) state.timers.push(c); }
+  function clearTimers() { state.timers.forEach(function (t) { if (t && t.kill) t.kill(); }); state.timers = []; }
+  function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+  function resetStats() {
+    state.order = shuffle(QUESTIONS); state.index = 0; state.score = 0; state.correct = 0; state.streak = 0; state.best = 0;
+    dom.score.textContent = '0'; M.ring(dom.ring, 0);
+  }
+  function buildQuestion() {
+    var Q = q();
+    M.killTree(dom.emojis); M.killTree(dom.options); M.killTree(dom.reveal);
+    dom.round.textContent = pad2(state.index + 1) + ' / ' + pad2(state.order.length);
+    var cards = [];
+    Q.emojis.forEach(function (emoji, i) {
+      var el = document.createElement('div'); el.className = 'ecard';
+      var inner = document.createElement('div'); inner.className = 'ecard-inner';
+      var face = document.createElement('div'); face.className = 'card-face';
+      face.innerHTML = LINES;
+      var em = document.createElement('span'); em.className = 'card-emoji'; em.textContent = emoji;
+      face.appendChild(em); inner.appendChild(face); el.appendChild(inner);
+      dom.emojis.appendChild(el);
+      cards.push({ el: el, inner: inner, tilt: TILTS[i] });
+    });
+    var options = shuffle(Q.options).map(function (opt, i) {
+      var b = document.createElement('button');
+      b.className = 'option-btn'; b.dataset.value = opt;
+      b.innerHTML = '<span class="option-face"><span class="option-label"></span><span class="option-tail"><span class="keycap">' + (i + 1) + '</span></span></span>';
+      b.querySelector('.option-label').textContent = opt;
+      b.addEventListener('click', function () { answer(b); });
+      b.addEventListener('pointerenter', function () { M.lift(b, true); });
+      b.addEventListener('pointerleave', function () { M.lift(b, false); });
+      dom.options.appendChild(b);
+      return b;
+    });
+    dom.next.innerHTML = (isLast() ? 'See results' : 'Next') + ' <span class="arrow" aria-hidden="true">&#8594;</span>';
+    M.hideNext(dom.next, false);
+    return { cards: cards, options: options };
+  }
+  function enter(parts, done) {
+    state.phase = 'entering';
+    M.enterQuestion(parts, function () { state.phase = 'awaiting'; if (done) done(); });
+  }
+  function start(fromView) {
+    if (state.busy) return;
+    state.busy = true; clearTimers(); resetStats();
+    M.viewSwap(fromView, dom.views.game, {
+      mutate: function () {
+        state.view = 'game';
+        var cs = dom.views.game.querySelectorAll('[data-animate]');
+        if (!M.instant) gsap.set(cs, { opacity: 1, y: 0 });
+        else cs.forEach(function (el) { el.style.opacity = 1; el.style.transform = 'none'; });
+        if (fromView === dom.views.start) M.killTweens(dom.introRow);
+        M.killTree(dom.odometer);
+      },
+      onShown: function (finish) { enter(buildQuestion(), finish); },
+      done: function () { state.busy = false; }
+    });
+  }
+  function answer(b) {
+    if (state.phase !== 'awaiting' || state.busy || b.disabled) return;
+    state.phase = 'answered';
+    var Q = q(), ok = b.dataset.value === Q.answer;
+    var all = Array.from(dom.options.children);
+    all.forEach(function (x) { x.disabled = true; M.lift(x, false); });
+    function markCorrect(x) {
+      x.classList.add('is-correct');
+      x.querySelector('.option-tail').innerHTML = '<svg class="check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>';
+      M.draw(x.querySelector('.check path'));
+    }
+    if (ok) {
+      markCorrect(b);
+      state.score += PTS; state.correct++; state.streak++; state.best = Math.max(state.best, state.streak);
+      M.roll(dom.score, state.score); M.pop(dom.score);
+      var r = b.getBoundingClientRect(), s = dom.stage.getBoundingClientRect();
+      M.chip(dom.stage, r.left - s.left + r.width / 2 - 14, r.top - s.top - 8, '+' + PTS);
+      M.dim(all.filter(function (x) { return x !== b; }));
+      M.react(Array.from(dom.emojis.children), true);
+      buzz(12);
+    } else {
+      b.classList.add('is-wrong');
+      b.querySelector('.option-tail').innerHTML = '<svg class="cross" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>';
+      M.draw(b.querySelector('.cross path'));
+      M.shake(b);
+      state.streak = 0;
+      all.forEach(function (x) { if (x.dataset.value === Q.answer) markCorrect(x); });
+      M.dim(all.filter(function (x) { return x !== b && x.dataset.value !== Q.answer; }));
+      M.react(Array.from(dom.emojis.children), false);
+      buzz([10, 40, 10]);
+    }
+    M.ring(dom.ring, (state.index + 1) / state.order.length);
+    later(0.25, function () {
+      dom.reveal.innerHTML =
+        '<span class="sr-only">' + (ok ? 'Correct. ' : 'Not quite. ') + '</span>' +
+        '<div class="reveal-head"><span class="reveal-name"></span><span class="reveal-year"></span></div>' +
+        '<p class="reveal-fact"></p>';
+      dom.reveal.querySelector('.reveal-name').textContent = Q.answer;
+      dom.reveal.querySelector('.reveal-year').textContent = 'EST. ' + Q.year;
+      dom.reveal.querySelector('.reveal-fact').textContent = Q.fact;
+      M.reveal(dom.reveal);
+      later(0.2, function () { M.showNext(dom.next, function () { dom.next.focus({ preventScroll: true }); }); });
+    });
+  }
+  function currentPieces() {
+    return Array.from(dom.emojis.children).concat(Array.from(dom.options.children)).concat(Array.from(dom.reveal.children));
+  }
+  function next() {
+    if (state.phase !== 'answered' || state.busy) return;
+    clearTimers(); M.hideNext(dom.next, true);
+    state.index++;
+    if (state.index < state.order.length) {
+      state.phase = 'exiting';
+      M.out(currentPieces(), function () { enter(buildQuestion()); });
+    } else finish();
+  }
+  function finish() {
+    state.phase = 'exiting'; state.busy = true; clearTimers();
+    var verdict = state.score <= 30 ? 'Intern energy. Run it back.' : state.score <= 60 ? 'Analyst at the fund.' : state.score <= 80 ? 'Partner track.' : 'Founder material.';
+    M.viewSwap(dom.views.game, dom.views.end, {
+      mutate: function () {
+        state.view = 'end';
+        dom.verdict.textContent = verdict;
+        dom.meta.textContent = state.correct + ' of ' + state.order.length + ' correct \u00B7 best streak ' + state.best;
+        dom.round.textContent = pad2(state.order.length) + ' / ' + pad2(state.order.length);
+        M.ring(dom.ring, 1);
+        M.killTree(dom.emojis); M.killTree(dom.options); M.killTree(dom.reveal);
+      },
+      done: function () {
+        state.busy = false; state.phase = 'idle';
+        M.odometer(dom.odometer, state.score, function () { if (state.score >= 70) M.confetti(); });
+      }
+    });
+  }
+  function restart() {
+    if (state.busy) return;
+    if (state.view === 'start') { start(dom.views.start); return; }
+    if (state.view === 'end') { start(dom.views.end); return; }
+    if (state.phase !== 'awaiting' && state.phase !== 'answered') return;
+    state.busy = true; state.phase = 'exiting'; clearTimers(); M.hideNext(dom.next, true); resetStats();
+    M.out(currentPieces(), function () { enter(buildQuestion(), function () { state.busy = false; }); });
+  }
+  function share() {
+    var base = 'I scored ' + state.score + '/' + MAX + ' on Emoji Founders \u2014 E-Cell Plaksha (' + state.correct + '/' + state.order.length + ' correct).';
+    var url = location.protocol.indexOf('http') === 0 ? '\n' + location.origin + location.pathname : '';
+    var payload = base + url;
+    function copied() { M.toast(dom.toast, 'Copied to clipboard'); }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = payload; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); copied(); } catch (e) { M.toast(dom.toast, 'Copy failed'); }
+      ta.remove();
+    }
+    if (navigator.share) navigator.share({ title: 'Emoji Founders', text: payload }).catch(function (err) { if (err && err.name !== 'AbortError') fallback(); });
+    else if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(payload).then(copied).catch(fallback);
+    else fallback();
+  }
+  window.addEventListener('keydown', function (e) {
+    if (e.repeat) return;
+    var tag = e.target.tagName;
+    if ((tag === 'BUTTON' || tag === 'A') && (e.key === 'Enter' || e.key === ' ')) return;
+    if (e.key.toLowerCase() === 'r') { e.preventDefault(); restart(); return; }
+    if (state.view === 'start' && e.key === 'Enter') { e.preventDefault(); start(dom.views.start); }
+    else if (state.view === 'game') {
+      if (['1', '2', '3', '4'].indexOf(e.key) !== -1 && state.phase === 'awaiting') {
+        var b = dom.options.children[Number(e.key) - 1];
+        if (b && !b.disabled) { M.tap(b); b.click(); }
+      } else if ((e.key === 'Enter' || e.key === 'ArrowRight') && state.phase === 'answered') { e.preventDefault(); next(); }
+    } else if (state.view === 'end' && e.key === 'Enter') { e.preventDefault(); start(dom.views.end); }
+  });
+  dom.startBtn.addEventListener('click', function () { start(dom.views.start); });
+  dom.next.addEventListener('click', next);
+  dom.restart.addEventListener('click', function () { start(dom.views.end); });
+  dom.share.addEventListener('click', share);
+  dom.shuffle.addEventListener('click', restart);
+  M.init();
+  dom.round.textContent = '00 / ' + pad2(QUESTIONS.length);
+  var introCards = Array.from(dom.introRow.querySelectorAll('.ecard')).map(function (el) {
+    return { el: el, inner: el.querySelector('.ecard-inner'), tilt: parseFloat(el.dataset.tilt) || 0 };
+  });
+  M.intro({
+    chrome: [dom.head, dom.foot],
+    cards: introCards,
+    rest: dom.views.start.querySelectorAll('.rules, .cta-row')
+  });
+})();
+</script>
 </body>
 </html>
